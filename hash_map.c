@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,7 +9,7 @@ typedef unsigned long u64;
 #define INIT_BUCKETS 7
 #define MAGIC_LOAD_FACTOR 0.7
 #define DJB2A_MAGIC 5381
-#define EPSILON 0.05
+#define EPSILON 0.10
 
 u64 djb2a(char* str) {
 	u64 hash = DJB2A_MAGIC;
@@ -61,33 +62,21 @@ u64 hash_map_len(hash_map_t* hash_map) {
 	return len;
 }
 
+u64 hash_map_bucket_collisions(hash_map_t* hash_map) {
+	u64 collisions = 0;
+	for (int i = 0; i < hash_map->num_buckets; i++) {
+		if (hash_map_bucket_len(&hash_map->buckets[i]) > 1)
+			collisions++;
+	}
+	return collisions;
+}
+
 float hash_map_load_factor(hash_map_t* hash_map) {
 	return (float)hash_map_len(hash_map) / hash_map->num_buckets;
 }
 
-void hash_map_bucket_insert(hash_map_bucket_t* hash_map_bucket,
-							hash_map_entry_t* entry);
-void hash_map_resize(hash_map_t* hash_map, u64 size) {
-	hash_map_bucket_t* new_buckets = calloc(size, sizeof(hash_map_bucket_t));
-
-	for (int i = 0; i < hash_map->num_buckets; i++) {
-		hash_map_entry_t* entry_ptr = hash_map->buckets[i].head;
-
-		while (entry_ptr) {
-			u64 hash = djb2a(entry_ptr->key);
-			hash_map_bucket_insert(&new_buckets[hash % size], entry_ptr);
-
-			entry_ptr = entry_ptr->next;
-		}
-	}
-
-	free(hash_map->buckets);
-	hash_map->num_buckets = size;
-	hash_map->buckets = new_buckets;
-}
-
-void hash_map_bucket_insert(hash_map_bucket_t* hash_map_bucket,
-							hash_map_entry_t* entry) {
+hash_map_entry_t* hash_map_bucket_insert(hash_map_bucket_t* hash_map_bucket,
+										 hash_map_entry_t* entry) {
 	hash_map_entry_t** head = &hash_map_bucket->head;
 	hash_map_entry_t* entry_ptr = *head;
 
@@ -99,16 +88,37 @@ void hash_map_bucket_insert(hash_map_bucket_t* hash_map_bucket,
 		}
 		entry_ptr->next = entry;
 	}
+
+	return entry;
+}
+
+void hash_map_resize(hash_map_t* hash_map, u64 size) {
+	hash_map_bucket_t* new_buckets = calloc(size, sizeof(hash_map_bucket_t));
+
+	for (int i = 0; i < hash_map->num_buckets; i++) {
+		hash_map_entry_t* entry_ptr = hash_map->buckets[i].head;
+
+		while (entry_ptr) {
+			u64 hash = djb2a(entry_ptr->key);
+			hash_map_entry_t* entry =
+				hash_map_bucket_insert(&new_buckets[hash % size], entry_ptr);
+			entry->next = NULL;
+
+			entry_ptr = entry_ptr->next;
+		}
+	}
+
+	free(hash_map->buckets);
+	hash_map->num_buckets = size;
+	hash_map->buckets = new_buckets;
 }
 
 hash_map_entry_t* hash_map_insert(hash_map_t* hash_map,
 								  char* key,
 								  char* value) {
 	float load_factor = hash_map_load_factor(hash_map);
-	if (load_factor > (MAGIC_LOAD_FACTOR - EPSILON)) {
-		u64 new_size =
-			(load_factor * hash_map->num_buckets) / MAGIC_LOAD_FACTOR + 1;
-		hash_map_resize(hash_map, new_size);
+	if (fabs(load_factor) > MAGIC_LOAD_FACTOR + EPSILON) {
+		hash_map_resize(hash_map, load_factor);
 	}
 
 	hash_map_entry_t* entry = malloc(sizeof(hash_map_entry_t));
@@ -141,10 +151,14 @@ hash_map_entry_t* hash_map_get(hash_map_t* hash_map, char* key) {
 int main() {
 	hash_map_t hash_map;
 	hash_map_init(&hash_map);
-	hash_map_insert(&hash_map, "name", "safin");
+	hash_map_insert(&hash_map, "name1", "safin1");
 	hash_map_insert(&hash_map, "name2", "safin2");
+	hash_map_insert(&hash_map, "name3", "safin3");
+	hash_map_insert(&hash_map, "name4", "safin4");
+	hash_map_insert(&hash_map, "name5", "safin5");
+	hash_map_insert(&hash_map, "name6", "safin6");
 
-	hash_map_entry_t* entry = hash_map_get(&hash_map, "name");
+	hash_map_entry_t* entry = hash_map_get(&hash_map, "name1");
 	printf("Key/value pair: %s - %s\n", entry->key, entry->value);
 
 	u64 len = hash_map_len(&hash_map);
@@ -153,10 +167,17 @@ int main() {
 	float load_factor = hash_map_load_factor(&hash_map);
 	printf("Load factor: %f\n", load_factor);
 
-	hash_map_resize(&hash_map, 10);
+	hash_map_insert(&hash_map, "name7", "safin7");
+	hash_map_insert(&hash_map, "name8", "safin8");
 	printf("Buckets: %lu\n", hash_map.num_buckets);
 
 	// retrieval still works after resize!
-	hash_map_entry_t* entry2 = hash_map_get(&hash_map, "name");
+	hash_map_entry_t* entry2 = hash_map_get(&hash_map, "name2");
 	printf("Key/value pair: %s - %s\n", entry2->key, entry2->value);
+
+	u64 collisions = hash_map_bucket_collisions(&hash_map);
+	printf("Bucket collisions: %lu\n", collisions);
+
+	load_factor = hash_map_load_factor(&hash_map);
+	printf("Load factor: %f\n", load_factor);
 }
