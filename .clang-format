@@ -1,4 +1,6 @@
 BasedOnStyle: Chromium
-UseTab: Always
 IndentWidth: 4
 TabWidth: 4
+UseTab: Always
+ColumnLimit: 100
+PointerAlignment: Left
