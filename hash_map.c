@@ -5,15 +5,7 @@
 
 #include "debug.h"
 #include "hash_map.h"
-
-u64 djb2a(char* str) {
-	u64 hash = DJB2A_MAGIC;
-	while (*str) {
-		hash = ((hash << 5) + hash) ^ *str++;
-	}
-
-	return hash;
-}
+#include "types.h"
 
 void hash_map_init(hash_map_t* hash_map) {
 	hash_map_bucket_t empty_bucket;

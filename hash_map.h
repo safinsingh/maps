@@ -1,12 +1,11 @@
+#include "types.h"
+
 #ifndef HASH_MAP_H
 #define HASH_MAP_H
 
 #define INIT_BUCKETS 13
 #define MAGIC_LOAD_FACTOR 0.7
-#define DJB2A_MAGIC 5381
 #define EPSILON 0.05
-
-typedef unsigned long u64;
 
 typedef struct hash_map_entry {
 	struct hash_map_entry* next;
