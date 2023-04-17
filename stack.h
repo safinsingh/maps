@@ -10,14 +10,14 @@ typedef struct {
 } stack_t;
 
 void stack_init(stack_t* stack) {
-	stack->items = malloc(DEFAULT_STACK_LEN * sizeof(void*));
+	stack->items = (void**)malloc(DEFAULT_STACK_LEN * sizeof(void*));
 	stack->len = 0;
 	stack->cap = DEFAULT_STACK_LEN;
 }
 
 void stack_resize(stack_t* stack) {
 	stack->cap *= 2;
-	stack->items = realloc(stack->items, stack->cap * sizeof(void*));
+	stack->items = (void**)realloc(stack->items, stack->cap * sizeof(void*));
 }
 
 void* stack_push(stack_t* stack, void* data) {
