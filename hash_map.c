@@ -73,14 +73,14 @@ hash_map_entry_t* hash_map_insert(hash_map_t* hash_map, char* key, char* value) 
 	return entry;
 }
 
-hash_map_entry_t* hash_map_get(hash_map_t* hash_map, char* key) {
+char* hash_map_get(hash_map_t* hash_map, char* key) {
 	u64 hash = djb2a(key);
 
 	hash_map_entry_t* entry_ptr = hash_map->buckets[hash % hash_map->num_buckets].head;
 
 	while (entry_ptr) {
 		if (strlen(key) == strlen(entry_ptr->key) && strcmp(key, entry_ptr->key) == 0) {
-			return entry_ptr;
+			return entry_ptr->value;
 		}
 		entry_ptr = entry_ptr->next;
 	}

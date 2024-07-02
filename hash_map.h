@@ -29,7 +29,7 @@ u64 hash_map_len(hash_map_t* hash_map);
 float hash_map_load_factor(hash_map_t* hash_map);
 void hash_map_resize(hash_map_t* hash_map);
 hash_map_entry_t* hash_map_insert(hash_map_t* hash_map, char* key, char* value);
-hash_map_entry_t* hash_map_get(hash_map_t* hash_map, char* key);
+char* hash_map_get(hash_map_t* hash_map, char* key);
 
 u64 hash_map_bucket_len(hash_map_bucket_t* bucket);
 u64 hash_map_bucket_collisions(hash_map_t* hash_map);
